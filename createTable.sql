@@ -41,13 +41,14 @@ DROP TABLE Vaccines
 -- SET VacTotalDoses = SUM(VacTotalDoses,1)
 -- WHERE VaccineId = 1;
 
--- Drop Table CareGiverSchedule
--- Drop Table AppointmentStatusCodes
 -- Drop Table Caregivers
+-- Drop Table CareGiverSchedule
 
+-- Drop Table AppointmentStatusCodes
 -- DROP TABLE Appointment
 -- DROP TABLE Patients
 -- Drop Table Vaccines
+
 
 
 -- DROP PROCEDURE initDataModel;  
@@ -55,3 +56,5 @@ DROP TABLE Vaccines
 
 EXEC initDataModel;
 GO
+
+

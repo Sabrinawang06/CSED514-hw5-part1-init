@@ -97,16 +97,16 @@ class TestVaccine(unittest.TestCase):
                 try:
                     clear_tables(sqlClient)
                     # Create a Vaccine object
-                    self.vac = Vaccine(1, 'Pfizer', 1, cursor)
+                    self.vac = Vaccine('Pfizer', 1, cursor)
                     # See if vaccine instance has been created correctly
                     sqlQuery = '''
-                                SELECT VaccineId, VaccineName, SecondDose
+                                SELECT VaccineId, SecondDose
                                 FROM Vaccines
-                                WHERE VaccineId = 1
+                                WHERE VaccineId = 'Pfizer'
                                 '''
                     cursor.execute(sqlQuery)
                     rows = cursor.fetchall()
-                    correct_output = {'VaccineId': 1, 'VaccineName': 'Pfizer', 'SecondDose': True}
+                    correct_output = {'VaccineId': 'Pfizer', 'SecondDose': True}
                     for row in rows:
                         if row != correct_output:
                             self.fail("Vaccine verification failed")
@@ -124,15 +124,15 @@ class TestVaccine(unittest.TestCase):
                 try: 
                     clear_tables(sqlClient)
                     # Create a Vaccine object
-                    self.vac = Vaccine(1, 'Pfizer', 1, cursor)
+                    self.vac = Vaccine('Pfizer', 1, cursor)
 
-                    self.vac.AddDose(1, 2, cursor)
+                    self.vac.AddDose('Pfizer', 2, cursor)
 
                     # Check if the VacTotalDoese is correctly updated
                     sqlQuery = '''
                                 SELECT VacTotalDoses
                                 FROM Vaccines
-                                WHERE VaccineId = 1
+                                WHERE VaccineId = 'Pfizer'
                                 '''
                     cursor.execute(sqlQuery)
                     rows = cursor.fetchall()
@@ -141,6 +141,14 @@ class TestVaccine(unittest.TestCase):
                             self.fail('Vaccine AddDose verification failed: incorect number of total doses '+str(row['VacTotalDoses']))
 
                     clear_tables(sqlClient)
+
+
+                    # Try AddDose for the wrong index 
+                    message = self.vac.AddDose('Pf', 2, cursor)
+                    
+                    if message !='Wrong Id':
+                        self.fail("AddDose fail to detect the wrong VaccineId")
+
 
                 except Exception:
                     # clear the tables if an exception occurred
@@ -156,15 +164,15 @@ class TestVaccine(unittest.TestCase):
                 try: 
                     clear_tables(sqlClient)
                     # Create a Vaccine object
-                    self.vac = Vaccine(1, 'Pfizer', 1, cursor)
+                    self.vac = Vaccine('Pfizer', 1, cursor)
 
-                    self.vac.AddDose(1, 2, cursor)
-                    self.vac.ReserveDoses(1,cursor)
+                    self.vac.AddDose('Pfizer', 2, cursor)
+                    self.vac.ReserveDoses('Pfizer',cursor)
                     # Check if the VacTotalDoese is correctly updated
                     sqlQuery = '''
                                 SELECT VacTotalDoses, VacReserveDoses
                                 FROM Vaccines
-                                WHERE VaccineId = 1
+                                WHERE VaccineId = 'Pfizer'
                                 '''
                     cursor.execute(sqlQuery)
                     rows = cursor.fetchall()
@@ -177,13 +185,18 @@ class TestVaccine(unittest.TestCase):
                     
                     # repeat the researve and nothing should change, enter not enough condition 
 
-                    message = self.vac.ReserveDoses(1,cursor)
+                    message = self.vac.ReserveDoses('Pfizer',cursor)
                     cursor.execute(sqlQuery)
                     rows = cursor.fetchall()
 
                     for row in rows:
                         if row['VacTotalDoses'] != 0 or row['VacReserveDoses'] != 2 or message != 'Not enough':
                             self.fail('Vaccine Second Dose reserve -not enough- conditon failed')
+
+                    # Try AddDose for the wrong index 
+                    message2 = self.vac.ReserveDoses('Pf', cursor)       
+                    if message2 !='Wrong Id':
+                        self.fail("ReserveDose fail to detect the wrong VaccineId")
 
                     clear_tables(sqlClient)
 
@@ -201,15 +214,15 @@ class TestVaccine(unittest.TestCase):
                 try: 
                     clear_tables(sqlClient)
                     # Create a Vaccine object
-                    self.vac = Vaccine(2, 'Jonthan', 0, cursor)
+                    self.vac = Vaccine('Jonthan', 0, cursor)
 
-                    self.vac.AddDose(2, 1, cursor)
-                    self.vac.ReserveDoses(2,cursor)
+                    self.vac.AddDose('Jonthan', 1, cursor)
+                    self.vac.ReserveDoses('Jonthan',cursor)
                     # Check if the VacTotalDoese is correctly updated
                     sqlQuery = '''
                                 SELECT VacTotalDoses, VacReserveDoses
                                 FROM Vaccines
-                                WHERE VaccineId = 2
+                                WHERE VaccineId = 'Jonthan'
                                 '''
                     cursor.execute(sqlQuery)
                     rows = cursor.fetchall()
@@ -219,13 +232,19 @@ class TestVaccine(unittest.TestCase):
                             self.fail('Vaccine Add2Dose verification failed. Incorrect number total: '+str(row['VacTotalDoses'])+' Reserve: '+ str(row['VacTotalDoses']))
 
                     # repeat the researve and nothing should change, enter not enough condition 
-                    message = self.vac.ReserveDoses(2,cursor)
+                    message = self.vac.ReserveDoses('Jonthan',cursor)
                     cursor.execute(sqlQuery)
                     rows = cursor.fetchall()
 
                     for row in rows:
                         if row['VacTotalDoses'] != 0 or row['VacReserveDoses'] != 1 or message != 'Not enough':
                             self.fail('Vaccine Second Dose reserve -not enough- conditon failed')
+                            
+                    # Try AddDose for the wrong index 
+                    message2 = self.vac.ReserveDoses('Pf', cursor)       
+                    if message2 !='Wrong Id':
+                        self.fail("ReserveDose fail to detect the wrong VaccineId")
+
 
                     clear_tables(sqlClient)
 

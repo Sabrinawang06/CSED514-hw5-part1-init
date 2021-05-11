@@ -4,10 +4,8 @@ AS
 BEGIN
 
     BEGIN
-
         CREATE TABLE Vaccines (
-            VaccineId int  PRIMARY KEY,
-            VaccineName VARCHAR(30),
+            VaccineId VARCHAR(20) PRIMARY KEY,
             VacTotalDoses int DEFAULT 0,
             VacReserveDoses int DEFAULT 0, 
             SecondDose BIT
@@ -23,14 +21,13 @@ BEGIN
     END;
 
     BEGIN
-
         CREATE TABLE Appointment (
             VaccineAppointmentId int IDENTITY PRIMARY KEY,
             PatientId int FOREIGN KEY (PatientId)
                     REFERENCES Patients(PatientId),
-            VaccineId int FOREIGN KEY (VaccineId)
+            VaccineId VARCHAR(20) FOREIGN KEY (VaccineId)
                     REFERENCES Vaccines(VaccineId)
-        )
+        );
     END;
 
     BEGIN

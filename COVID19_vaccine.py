@@ -5,16 +5,16 @@ import pymssql
 
 class COVID19Vaccine:
     ''' Adds the Vaccine inventory to the DB '''
-    def __init__(self, vid, name, second, cursor):
+    def __init__(self, vid, second, cursor):
 
-        self.sqltext = "INSERT INTO Vaccines (VaccineId, VaccineName, SecondDose) VALUES ({},{},{})".format(vid,"'"+name+"'",second)
+        self.sqltext = "INSERT INTO Vaccines (VaccineId, SecondDose) VALUES ({},{})".format("'"+ vid +"'",second)
 
         try: 
             cursor.execute(self.sqltext)
             cursor.connection.commit()
 
             # cursor.connection.commit()
-            print('Query executed successfully. Vaccine {} with Id = {}'.format(name,vid))
+            print('Query executed successfully. Vaccine  {}'.format(vid))
         except pymssql.Error as db_err:
             print("Database Programming Error in SQL Query processing for Caregivers! ")
             print("Exception code: " + str(db_err.args[0]))
@@ -26,17 +26,25 @@ class COVID19Vaccine:
     def AddDose(self, vid, num, cursor):
         ''' Method that add a given amount of vaccine doses to a certain vaccine'''
 
-        self.addDoseSQL = "UPDATE Vaccines SET VacTotalDoses = VacTotalDoses + {} WHERE VaccineId = {}".format(num,vid)
-        self.checkDose = "SELECT VacTotalDoses FROM Vaccines  WHERE VaccineId = {}".format(vid)
+        self.addDoseSQL = "UPDATE Vaccines SET VacTotalDoses = VacTotalDoses + {} WHERE VaccineId = {}".format(num,"'"+ vid +"'")
+        self.checkDose = "SELECT VacTotalDoses FROM Vaccines  WHERE VaccineId = {}".format("'"+ vid +"'")
         try:
             cursor.execute(self.addDoseSQL)
             cursor.execute(self.checkDose)
             rows = cursor.fetchall()
+            current_num = -1
+
             for row in rows:
                 current_num = (row['VacTotalDoses'])
             cursor.connection.commit()
 
-            print("Vaccine: {} has {} in the inventory".format(vid,current_num))
+            # If the current_num is not updated, indicates a wrong VaccineId
+            if current_num == -1:
+                print('No research result in the inventory. Please check your VaccineId')
+                return 'Wrong Id'
+
+            else:
+                print("Vaccine: {} has {} in the inventory".format(vid,current_num))
         
         except pymssql.Error as db_err:
             print("Database Programming Error in SQL Query processing! ")
@@ -50,19 +58,25 @@ class COVID19Vaccine:
     def ReserveDoses(self, vid, cursor):
         '''increment to the VacReserveDoses to a given vaccine'''
 
-        self.checkSecond = "SELECT SecondDose FROM Vaccines  WHERE VaccineId = {}".format(vid)
-        self.checkDose = "SELECT VacTotalDoses FROM Vaccines  WHERE VaccineId = {}".format(vid)
-        self.reserve2DoseSQL = "UPDATE Vaccines SET VacReserveDoses = VacReserveDoses + 2  WHERE VaccineId = {}".format(vid)
-        self.deduct2DoseSQL = "UPDATE Vaccines SET VacTotalDoses = VacTotalDoses -2  WHERE VaccineId = {}".format(vid)
-        self.reserveDoseSQL = "UPDATE Vaccines SET VacReserveDoses = VacReserveDoses + 1  WHERE VaccineId = {}".format(vid)
-        self.deductDoseSQL = "UPDATE Vaccines SET VacTotalDoses = VacTotalDoses -1  WHERE VaccineId = {}".format(vid)
+        self.checkSecond = "SELECT SecondDose FROM Vaccines  WHERE VaccineId = {}".format("'"+ vid +"'")
+        self.checkDose = "SELECT VacTotalDoses FROM Vaccines  WHERE VaccineId = {}".format("'"+ vid +"'")
+        self.reserve2DoseSQL = "UPDATE Vaccines SET VacReserveDoses = VacReserveDoses + 2  WHERE VaccineId = {}".format("'"+ vid +"'")
+        self.deduct2DoseSQL = "UPDATE Vaccines SET VacTotalDoses = VacTotalDoses -2  WHERE VaccineId = {}".format("'"+ vid +"'")
+        self.reserveDoseSQL = "UPDATE Vaccines SET VacReserveDoses = VacReserveDoses + 1  WHERE VaccineId = {}".format("'"+ vid +"'")
+        self.deductDoseSQL = "UPDATE Vaccines SET VacTotalDoses = VacTotalDoses -1  WHERE VaccineId = {}".format("'"+ vid +"'")
         try:
             cursor.execute(self.checkSecond)
             rows = cursor.fetchall()
+
+            if len(rows) ==0:
+                # If the current_num is not updated, indicates a wrong VaccineId
+                print('No research result in the inventory. Please check your VaccineId')
+                return 'Wrong Id'
+
             for row in rows:
                 # check if second doses is needed
-                if row['SecondDose']:
-                    
+                if row['SecondDose']: 
+
                     cursor.execute(self.checkDose)
                     rows = cursor.fetchall()
                     for row in rows:
@@ -74,8 +88,8 @@ class COVID19Vaccine:
                         cursor.execute(self.deduct2DoseSQL)
                         cursor.connection.commit()
 
-                        print("Vaccine "+str(vid)+'has been succesfully reserved')
-                    
+                        print("Vaccine "+str(vid)+' has been succesfully reserved')
+
                     else:
                         print("Not enough vaccine left for vaccine " + str(vid))
                         return 'Not enough'
@@ -94,9 +108,9 @@ class COVID19Vaccine:
                         cursor.connection.commit()
 
                         print("Vaccine "+str(vid)+' has been succesfully reserved')
-                    
+
                     else:
-                        print("Not enough vaccine left for vaccine" + str(vid))
+                        print("Not enough vaccine left for vaccine " + str(vid))
 
                         return 'Not enough'
 
