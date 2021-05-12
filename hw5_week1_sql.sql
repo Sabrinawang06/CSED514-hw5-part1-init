@@ -21,16 +21,6 @@ BEGIN
     END;
 
     BEGIN
-        CREATE TABLE Appointment (
-            VaccineAppointmentId int IDENTITY PRIMARY KEY,
-            PatientId int FOREIGN KEY (PatientId)
-                    REFERENCES Patients(PatientId),
-            VaccineId VARCHAR(20) FOREIGN KEY (VaccineId)
-                    REFERENCES Vaccines(VaccineId)
-        );
-    END;
-
-    BEGIN
         Create Table Caregivers(
             CaregiverId int IDENTITY PRIMARY KEY,
             CaregiverName varchar(50)
@@ -84,6 +74,17 @@ BEGIN
                 CONSTRAINT FK_CaregiverStatusCode FOREIGN KEY (SlotStatus) 
                     REFERENCES AppointmentStatusCodes(StatusCodeId),
             VaccineAppointmentId int DEFAULT 0 NOT NULL);
+    END;
+
+    ---update this later 
+    BEGIN
+        CREATE TABLE Appointment (
+            VaccineAppointmentId int PRIMARY KEY,
+            PatientId int FOREIGN KEY (PatientId)
+                    REFERENCES Patients(PatientId),
+            VaccineId VARCHAR(20) FOREIGN KEY (VaccineId)
+                    REFERENCES Vaccines(VaccineId)
+        );
     END;
 
 END;   

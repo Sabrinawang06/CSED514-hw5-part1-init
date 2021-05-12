@@ -1,67 +1,37 @@
-/*
+Use CoronaVirus
+GO
 
-CREATE TABLE Patients (
-    PatientId int IDENTITY PRIMARY KEY,
-    PatientName varchar(30),
-    PatientDOB date
-);
+InitScheduerApp
 
 
-CREATE TABLE Vaccines (
-    VaccineId int  PRIMARY KEY,
-    VaccineName VARCHAR(30),
-    VacTotalDoses int DEFAULT 0,
-    VacReserveDoses int DEFAULT 0, 
-    SecondDose BIT
-);
+IF OBJECT_ID ( 'InitScheduerApp', 'P' ) IS NOT NULL
+    DROP PROCEDURE InitScheduerApp;
+GO  
 
 
+--- Drop commands to restructure the DB
+Drop Table VaccineAppointments
+Drop Table Vaccines
+Drop Table Patients
+Drop Table CareGiverSchedule
+Drop Table AppointmentStatusCodes
+Drop Table PatientAppointmentStatusCodes
+Drop Table Caregivers
+Go
+
+--- Commands to clear the active database Tables for unit testing
+Truncate Table VaccineAppointments
+Truncate Table Vaccines
+Truncate Table CareGiverSchedule
+Delete From Patients
+Delete From Caregivers
 
 
-CREATE TABLE Appointment (
-    VaccineAppointmentId int IDENTITY PRIMARY KEY,
-    PatientId int FOREIGN KEY (PatientId)
-            REFERENCES Patients(PatientId),
-    VaccineId int FOREIGN KEY (VaccineId)
-            REFERENCES Vaccines(VaccineId)
-)
-
-
-DROP TABLE Appointment
-DROP TABLE Vaccines
-*/
-
----INSERT INTO Vaccines (VaccineId, VaccineName, SecondDose) VALUES(1,'Pfizer',1)
----SELECT * FROM Vaccines
-
-
-
-
--- UPDATE Vaccines 
--- SET VacTotalDoses = SUM(VacTotalDoses,1)
--- WHERE VaccineId = 1;
-
-
----Drop Table PatientAppointmentStatusCodes
--- DROP TABLE Appointment
--- Drop Table CareGiverSchedule
--- Drop Table AppointmentStatusCodes
-
--- Drop Table Caregivers
--- DROP TABLE Patients
--- Drop Table Vaccines
-
-
-
--- DROP PROCEDURE initDataModel;  
--- GO  
-
--- EXEC initDataModel;
--- GO
+GO
 
 --- DDL to define the VaccineReservationScheduler Tables 
-
-
+CREATE PROCEDURE InitScheduerApp
+   AS
 
 Create Table Caregivers(
 	CaregiverId int IDENTITY PRIMARY KEY,
@@ -168,11 +138,3 @@ Create Table VaccineAppointments(
 		DoseNumber int
 );
 
-
-
-
--- UPDATE Vaccines SET AvailableDoses = AvailableDoses + 2, TotalDoses = TotalDoses + 2
--- WHERE VaccineName = 'Pfizer';
-
--- SELECT *
--- FROM Vaccines

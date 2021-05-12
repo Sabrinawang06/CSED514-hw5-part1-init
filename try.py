@@ -5,7 +5,7 @@ from sql_connection_manager import SqlConnectionManager
 from vaccine_caregiver import VaccineCaregiver
 from enums import *
 from utils import *
-from COVID19_vaccine import COVID19Vaccine as Vaccine
+from new_vaccines import COVID19Vaccine as Vaccine
 
 """
 with SqlConnectionManager(Server=os.getenv("Server"),
@@ -45,23 +45,23 @@ with SqlConnectionManager(Server=os.getenv("Server"),
                             Password=os.getenv("Password")) as sqlClient:
     with sqlClient.cursor(as_dict=True) as cursor:
         cursor.execute("DELETE FROM Vaccines")
-        vac = Vaccine('Pfizer', 1, cursor) 
+        vac = Vaccine('Pfizer', 2, 21, cursor) 
         vac.AddDose('Pfizer', 1, cursor)
-        message = vac.ReserveDoses('Pfiz',cursor)
+        vac.ReserveDoses('Pfizer', cursor)
 
-        print(message)
 
-        # vac = Vaccine('Jonthan', 0, cursor) 
+
+        # vac = Vaccine('Jonthan', 1, cursor) 
         # vac.AddDose('Jonthan', 1, cursor)
         # vac.ReserveDoses('Jonthan',cursor)
 
-        # sqlQuery = '''
-        #             SELECT *
-        #             FROM Vaccines
-        #             '''
-        # cursor.execute(sqlQuery)
-        # rows = cursor.fetchall()
-        # print(rows)
+        sqlQuery = '''
+                    SELECT *
+                    FROM Vaccines
+                    '''
+        cursor.execute(sqlQuery)
+        rows = cursor.fetchall()
+        print(rows)
 
 # vid = 1
 # name = 'Pifzer'
