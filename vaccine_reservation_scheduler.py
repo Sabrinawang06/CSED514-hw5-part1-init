@@ -17,24 +17,66 @@ class VaccineReservationScheduler:
     def __init__(self):
         return
 
-    def PutHoldOnAppointmentSlot(self, cursor):
-        ''' Method that reserves a CareGiver appointment slot &
-        returns the unique scheduling slotid
-        Should return 0 if no slot is available  or -1 if there is a database error'''
-        # Note to students: this is a stub that needs to replaced with your code
-        self.slotSchedulingId = 0
-        self.getAppointmentSQL = "SELECT something..."
+    def CheckStatus(self, slotid, cursor):
+        self.slotSchedulingId = slotid
+        self.getAppointmentSQL = "SELECT SlotStatus FROM CareGiverSchedule WHERE CaregiverSlotSchedulingId = {}".format(slotid)
+
         try:
             cursor.execute(self.getAppointmentSQL)
-            cursor.connection.commit()
-            return self.slotSchedulingId
+            row = cursor.fetchone()
+            current_status = row['SlotStatus']
+              
+
+            return current_status
+
+        except TypeError:
+            print('Input slot id is invalid')
+        except pymssql.Error as db_err:
+            print("Database Programming Error in SQL Query processing! ")
+            print("Exception code: " + str(db_err.args[0]))
+            if len(db_err.args) > 1:
+                print("Exception message: " + db_err.args[1])           
+            cursor.connection.rollback()
+            return -1
+
+    def PutHoldOnAppointmentSlot(self, slotid, cursor):
+        ''' Method that reserves a CareGiver appointment slot &
+        returns the unique scheduling slotid
+        Parameter:
+        slotid: CaregiverSlotSchedulingId int 
+         '''
+        # Note to students: this is a stub that needs to replaced with your code
+        self.slotSchedulingId = slotid
+        self.getAppointmentSQL = "SELECT SlotStatus FROM CareGiverSchedule WHERE CaregiverSlotSchedulingId = {}".format(slotid)
+        self.setOnHold =  "UPDATE CareGiverSchedule SET SlotStatus = 1 WHERE CaregiverSlotSchedulingId = {}".format(slotid)
+        try:
+            cursor.execute(self.getAppointmentSQL)
+            rows = cursor.fetchall()
+            current_status = -1
+            message = ''
+            for row in rows:
+                current_status = row['SlotStatus']
+            
+            if current_status == -1:
+                message = "Wrong Slot ID"
+                print("Incorrect Slot ID; please check your input ID")
+            elif current_status == 0:
+                cursor.execute(self.setOnHold)
+                cursor.connection.commit()
+                print("Slot {} has been successfully set on hold".format(slotid))
+            else: 
+                message = 'Slot not free'
+                print('Given slot is not free')
+                cursor.connection. rollback() 
+
+            return message
         
         except pymssql.Error as db_err:
             print("Database Programming Error in SQL Query processing! ")
             print("Exception code: " + str(db_err.args[0]))
             if len(db_err.args) > 1:
                 print("Exception message: " + db_err.args[1])           
-            print("SQL text that resulted in an Error: " + self.getAppointmentSQL)
+
             cursor.connection.rollback()
             return -1
 
@@ -46,19 +88,38 @@ class VaccineReservationScheduler:
         returns -1 the same slotid when the database command fails
         returns 21 if the slotid parm is invalid '''
         # Note to students: this is a stub that needs to replaced with your code
-        if slotid < 1:
-            return -2
+
         self.slotSchedulingId = slotid
-        self.getAppointmentSQL = "SELECT something... "
+        self.getAppointmentSQL = "SELECT SlotStatus FROM CareGiverSchedule WHERE CaregiverSlotSchedulingId = {}".format(slotid)
+        self.setOnHold =  "UPDATE CareGiverSchedule SET SlotStatus = 2 WHERE CaregiverSlotSchedulingId = {}".format(slotid)
         try:
             cursor.execute(self.getAppointmentSQL)
-            return self.slotSchedulingId
+            rows = cursor.fetchall()
+            current_status = -1
+            message = ''
+            for row in rows:
+                current_status = row['SlotStatus']
+            
+            if current_status == -1:
+                message = "Wrong Slot ID"
+                print("Incorrect Slot ID; please check your input ID")
+            elif current_status == 1:
+                cursor.execute(self.setOnHold)
+                cursor.connection.commit()
+                print("Slot {} has been successfully set on hold".format(slotid))
+            else: 
+                message = 'Slot not on hold'
+                print('Given slot is not on hold')
+                cursor.connection. rollback() 
+
+            return message
+            
         except pymssql.Error as db_err:    
             print("Database Programming Error in SQL Query processing! ")
             print("Exception code: " + db_err.args[0])
             if len(db_err.args) > 1:
                 print("Exception message: " + str(db_err.args[1]))  
-            print("SQL text that resulted in an Error: " + self.getAppointmentSQL)
+            cursor.connection.rollback()
             return -1
 
 if __name__ == '__main__':
