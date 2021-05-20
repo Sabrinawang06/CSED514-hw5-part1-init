@@ -48,7 +48,6 @@ class SqlConnectionManager:
             print("stack trace: " + str(callstack))
 
 
-
 # connection_manager = SqlConnectionManager(Server=os.getenv("Server"),
 #                      DBname=os.getenv("DBName"),
 #                      UserId=os.getenv("UserID"),
@@ -59,3 +58,9 @@ class SqlConnectionManager:
 
 
 
+
+# print(os.getenv("Server"))
+# print(os.getenv("DBName"))
+# print(os.getenv("UserID"))
+# print(os.getenv("Password"))
+# print(os.getenv("TDSVER"))
