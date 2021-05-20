@@ -5,15 +5,16 @@
 -- --       AND SlotStatus = 0 
 
 
-SELECT *
-FROM Patients;
+-- SELECT *
+-- FROM Patients;
 
-select *
-from vaccines;
+-- select *
+-- from vaccines;
 
 select * 
 from VaccineAppointments;
 
-select * 
-from CareGiverSchedule;
+-- select CaregiverSlotSchedulingId
+-- from CareGiverSchedule
+-- where SlotStatus = 2;
 
