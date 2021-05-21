@@ -47,7 +47,7 @@ class TestReservationScheduler(unittest.TestCase):
                     clear_tables(sqlClient)
                     self.fail("Check Staus failed with an exception")
 
-    def testHold(self):
+    def testHoldSlot(self):
         with SqlConnectionManager(Server=os.getenv("Server"),
                                   DBname=os.getenv("DBName"),
                                   UserId=os.getenv("UserID"),
@@ -75,7 +75,7 @@ class TestReservationScheduler(unittest.TestCase):
                     # clear_tables(sqlClient)
 
                     message1 = self.scheduler.PutHoldOnAppointmentSlot(1,cursor=cursor)
-                    if message1 != "Given slot is not free":
+                    if message1 != 'Slot not free':
                         self.fail("Fail to recognize slot as not free")
 
                     message2 = self.scheduler.PutHoldOnAppointmentSlot(999, cursor=cursor)
@@ -111,24 +111,26 @@ class TestReservationScheduler(unittest.TestCase):
                                FROM CareGiverSchedule
                                WHERE CaregiverSlotSchedulingId = 1
                                '''
+                               
                     cursor.execute(sqlQuery)
                     row = cursor.fetchone()
                     if row['SlotStatus'] != 2:
                         self.fail("Put Schedulin Slot on Reserve failed")
 
-                    message1 = self.scheduler.PutHoldOnAppointmentSlot(1,cursor=cursor)
-                    if message1 != "Given slot is not on hold":
+                    message1 = self.scheduler.ScheduleAppointmentSlot(3,cursor=cursor)
+                    if message1 != 'Slot not on hold':
                         self.fail("Fail to recognize slot as not on hold")
 
-                    message2 = self.scheduler.PutHoldOnAppointmentSlot(999, cursor=cursor)
+                    message2 = self.scheduler.ScheduleAppointmentSlot(999, cursor=cursor)
                     if message2 != "Wrong Slot ID":
                         self.fail("Fail to-recogonize wrong slot ID")
 
                     clear_tables(sqlClient)
+
                 except Exception:
                     # clear the tables if an exception occurred
                     clear_tables(sqlClient)
-                    self.fail("Put Schedulin Slot on Hold failed with an exception")
+                    self.fail("Put Scheduling Slot on reserve failed with an exception")
 
 
 
@@ -168,6 +170,7 @@ class TestPatient(unittest.TestCase):
                                   DBname=os.getenv("DBName"),
                                   UserId=os.getenv("UserID"),
                                   Password=os.getenv("Password")) as sqlClient:
+
             with sqlClient.cursor(as_dict=True) as cursor:
                 try:
                     # clear the tables before testing
@@ -175,10 +178,13 @@ class TestPatient(unittest.TestCase):
                     # create a new patient and vaccine
 
                     self.patient_a= patient('Jon Do', cursor = cursor)
+                    self.caregiver_a = VaccineCaregiver(name="Steve Ma",
+                                        cursor=cursor)
                     self.vac = Vaccine('Pfizer', 2, 21, cursor)
                     self.vac.AddDose(4, cursor)
 
-                    self.patient_a.ReserveAppointment(1,self.vac, cursor)
+                    #Reserve the two doses
+                    self.patient_a.ReserveAppointment(1, self.vac, cursor)
 
                     # check if the patient is correctly inserted into the database
                     sqlQuery = '''
@@ -187,15 +193,15 @@ class TestPatient(unittest.TestCase):
                                '''
                     cursor.execute(sqlQuery)
                     row = cursor.fetchone()
-
+                    
                     if row['VaccineStatus'] != 4:
                         self.fail("Fail to reserve both dose for patient")
 
                     
                     sqlQuery = '''
-                               SELECT *
+                               SELECT CaregiverSlotSchedulingId
                                FROM VaccineAppointments
-                               WHERE PatientId = 1 and VaccineNmae = 'Pfizer'
+                               WHERE PatientId = 1 and VaccineName = 'Pfizer'
                                '''
 
                     cursor.execute(sqlQuery)
@@ -204,16 +210,17 @@ class TestPatient(unittest.TestCase):
                     if len(rows) != 2:
                         self.fail("Fail to create two appointment entries of Appoint table")
 
-                    for row in rows:
-                        if row["CaregiverSlotSchedulingId"] != 0:
-                            self.fail("Fail to assign correct slot Id to the Appointment table")
+
+                    if rows != [{'CaregiverSlotSchedulingId': 1}, {'CaregiverSlotSchedulingId': 33}]:
+                        self.fail("Fail to assign correct slot id")
 
                     clear_tables(sqlClient)
 
                 except Exception:
                     # clear the tables if an exception occurred
                     clear_tables(sqlClient)
-                    self.fail("Creating patient failed with some exception")
+                    self.fail("Reserving appointment failed with some exception")
+
     def testScheduleAppt(self):
         with SqlConnectionManager(Server=os.getenv("Server"),
                                   DBname=os.getenv("DBName"),
@@ -228,8 +235,13 @@ class TestPatient(unittest.TestCase):
                     self.patient_a= patient('Jon Do', cursor = cursor)
                     self.vac = Vaccine('Pfizer', 2, 21, cursor)
                     self.vac.AddDose(4, cursor)
+                    self.caregiver_a = VaccineCaregiver(name="Steve Ma",
+                                        cursor=cursor)
+
+                    # Reserve the two doses and put them as scheduled 
 
                     self.patient_a.ReserveAppointment(1,self.vac, cursor)
+                    self.patient_a.ScheduleAppointment(cursor)
 
                     # check if the patient is correctly inserted into the database
                     sqlQuery = '''
@@ -239,14 +251,14 @@ class TestPatient(unittest.TestCase):
                     cursor.execute(sqlQuery)
                     row = cursor.fetchone()
 
-                    if row['VaccineStatus'] != 4:
+                    if row['VaccineStatus'] != 5:
                         self.fail("Fail to reserve both dose for patient")
 
                     
                     sqlQuery = '''
-                               SELECT *
+                               SELECT CaregiverSlotSchedulingId
                                FROM VaccineAppointments
-                               WHERE PatientId = 1 and VaccineNmae = 'Pfizer'
+                               WHERE PatientId = 1 and VaccineName = 'Pfizer'
                                '''
 
                     cursor.execute(sqlQuery)
@@ -255,16 +267,15 @@ class TestPatient(unittest.TestCase):
                     if len(rows) != 2:
                         self.fail("Fail to create two appointment entries of Appoint table")
 
-                    for row in rows:
-                        if row["CaregiverSlotSchedulingId"] != 0:
-                            self.fail("Fail to assign correct slot Id to the Appointment table")
+                    if rows != [{'CaregiverSlotSchedulingId': 1}, {'CaregiverSlotSchedulingId': 33}]:
+                        self.fail("Fail to assign correct slot id")
 
                     clear_tables(sqlClient)
 
                 except Exception:
                     # clear the tables if an exception occurred
                     clear_tables(sqlClient)
-                    self.fail("Creating patient failed with some exception")
+                    self.fail("Scheduling Appointment failed with some exception")
 
 class TestOverall(unittest.TestCase):
     def test_overall(self):
@@ -309,6 +320,7 @@ class TestOverall(unittest.TestCase):
                     patient_e.ReserveAppointment(5, vac, cursor)
                     patient_e.ScheduleAppointment(cursor)
 
+                    # Check the Vaccine table 
                     sqlQuery = '''
                                 SELECT *
                                 FROM Vaccines
@@ -316,6 +328,10 @@ class TestOverall(unittest.TestCase):
                     cursor.execute(sqlQuery)
                     vac_rows = cursor.fetchall()
 
+                    if vac_rows != [{'VaccineName': 'Pfizer', 'VaccineSupplier': None, 'AvailableDoses': 1, 'ReservedDoses': 4, 'TotalDoses': 5, 'DosesPerPatient': 2, 'DaysBetweenDoses': 21}]:
+                        self.fail("Vaccine table is not updated correctly in the overall testing")
+
+                    # Check the Patients table 
                     sqlQuery = '''
                                 SELECT PatientName
                                 FROM Patients
@@ -324,14 +340,21 @@ class TestOverall(unittest.TestCase):
                     cursor.execute(sqlQuery)
                     pat_rows = cursor.fetchall()
 
+                    if pat_rows !=[{'PatientName': 'Adam Uno'}, {'PatientName': 'Bruce Dos'}]:
+                        self.fail("Patient Table is not updated correctly in the overall testing")
+                    
+                    # Check VaccineAppointments table 
                     sqlQuery = '''
-                                SELECT *
+                                SELECT CaregiverSlotSchedulingId, SlotStatus
                                 FROM VaccineAppointments
                                 '''
                     cursor.execute(sqlQuery)
                     appt_rows = cursor.fetchall()
 
+                    if appt_rows != [{'CaregiverSlotSchedulingId': 1, 'SlotStatus': 2}, {'CaregiverSlotSchedulingId': 33, 'SlotStatus': 2}, {'CaregiverSlotSchedulingId': 2, 'SlotStatus': 2}, {'CaregiverSlotSchedulingId': 34, 'SlotStatus': 2}]:
+                        self.fail("VaccineAppointments table is not updated correctly in the overall testing")
 
+                    # Check CareGiverSchedule table 
                     sqlQuery = '''
                                 select CaregiverSlotSchedulingId
                                 from CareGiverSchedule
@@ -339,8 +362,9 @@ class TestOverall(unittest.TestCase):
                                 '''
                     cursor.execute(sqlQuery)
                     slot_rows = cursor.fetchall()
-                    for row in slot_rows:
-                        pass
+
+                    if slot_rows != [{'CaregiverSlotSchedulingId': 1}, {'CaregiverSlotSchedulingId': 2}, {'CaregiverSlotSchedulingId': 33}, {'CaregiverSlotSchedulingId': 34}]:
+                        self.fail("CareGiverSchedule table is not updated corretly in the overall testing")
 
                 except Exception:
                     # clear the tables if an exception occurred

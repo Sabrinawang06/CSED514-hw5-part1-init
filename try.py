@@ -14,6 +14,29 @@ with SqlConnectionManager(Server=os.getenv("Server"),
                             UserId=os.getenv("UserID"),
                             Password=os.getenv("Password")) as sqlClient:
     with sqlClient.cursor(as_dict=True) as cursor:
+
+        clear_tables(sqlClient)
+        caregiver_a = VaccineCaregiver(name="Steve Ma",
+                            cursor=cursor)
+        # create a new scheduler 
+        scheduler = VaccineReservationScheduler()
+        scheduler.PutHoldOnAppointmentSlot(1,cursor=cursor)
+        # check if the patient is correctly inserted into the database
+        sqlQuery = '''
+                    SELECT SlotStatus
+                    FROM CareGiverSchedule
+                    WHERE CaregiverSlotSchedulingId = 1
+                    '''
+        cursor.execute(sqlQuery)
+        row = cursor.fetchone()
+        message1 = scheduler.PutHoldOnAppointmentSlot(1,cursor=cursor)
+        if message1 != "Given slot is not free":
+            print("fail 1")
+        
+        message2 = scheduler.PutHoldOnAppointmentSlot(999, cursor=cursor)
+        if message1 != "Wrong Slot ID":
+            print("fail 2")
+
         # clear_tables(sqlClient)
         # vac = Vaccine('Pfizer', 2, 21, cursor)
         # #vac.CheckDose(cursor) 
@@ -64,37 +87,40 @@ with SqlConnectionManager(Server=os.getenv("Server"),
         # # cursor.execute(sqlQuery)
         # # rows = cursor.fetchone()
         # # print(rows['WorkDay'])
-        clear_tables(sqlClient)
-        vac = Vaccine('Pfizer', 2, 21, cursor)
-        vac.AddDose(5, cursor)
 
-        # create a new VaccineCaregiver object
-        caregiver_a = VaccineCaregiver(name="John Smith",
-                                        cursor=cursor)
-        caregiver_b = VaccineCaregiver(name="Mary Smith",
-                                        cursor=cursor)
 
-        patient_a = patient('Adam Uno', cursor = cursor)
+        # clear_tables(sqlClient)
+        # vac = Vaccine('Pfizer', 2, 21, cursor)
+        # vac.AddDose(5, cursor)
+
+        # # create a new VaccineCaregiver object
+        # caregiver_a = VaccineCaregiver(name="John Smith",
+        #                                 cursor=cursor)
+        # caregiver_b = VaccineCaregiver(name="Mary Smith",
+        #                                 cursor=cursor)
+
+        # patient_a = patient('Adam Uno', cursor = cursor)
         
-        patient_a.ReserveAppointment(1, vac, cursor)
-        patient_a.ScheduleAppointment(cursor)
+        # patient_a.ReserveAppointment(1, vac, cursor)
+        # patient_a.ScheduleAppointment(cursor)
 
-        patient_b = patient('Bruce Dos', cursor = cursor)
+        # patient_b = patient('Bruce Dos', cursor = cursor)
         
-        patient_b.ReserveAppointment(2, vac, cursor)
-        patient_b.ScheduleAppointment(cursor)
+        # patient_b.ReserveAppointment(2, vac, cursor)
+        # patient_b.ScheduleAppointment(cursor)
 
-        patient_c = patient('Cathy Tres', cursor = cursor)
+        # patient_c = patient('Cathy Tres', cursor = cursor)
         
-        patient_c.ReserveAppointment(3, vac, cursor)
-        patient_c.ScheduleAppointment(cursor)
+        # patient_c.ReserveAppointment(3, vac, cursor)
+        # patient_c.ScheduleAppointment(cursor)
 
-        patient_d = patient('Dasiy Cuatro', cursor = cursor)
+        # patient_d = patient('Dasiy Cuatro', cursor = cursor)
         
-        patient_d.ReserveAppointment(4, vac, cursor)
-        patient_d.ScheduleAppointment(cursor)
+        # patient_d.ReserveAppointment(4, vac, cursor)
+        # patient_d.ScheduleAppointment(cursor)
 
-        patient_e = patient('Ema Cinco', cursor = cursor)
+        # patient_e = patient('Ema Cinco', cursor = cursor)
         
-        patient_e.ReserveAppointment(5, vac, cursor)
-        patient_e.ScheduleAppointment(cursor)
+        # patient_e.ReserveAppointment(5, vac, cursor)
+        # patient_e.ScheduleAppointment(cursor)
+
